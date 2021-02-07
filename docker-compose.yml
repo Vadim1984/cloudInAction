@@ -1,6 +1,6 @@
 version: '3.7'
 services:
   web:
-    build: .
+    image: "shvadim84/cloudinactiondockerrepo:latest"
     ports:
       - 3333:8080
