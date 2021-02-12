@@ -1,7 +1,0 @@
-# exclude not needed files and dirs for building image:
-build
-.idea
-.gradle
-gradle
-.git*
-putty

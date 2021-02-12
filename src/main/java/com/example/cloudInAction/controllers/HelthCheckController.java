@@ -11,6 +11,6 @@ public class HelthCheckController
 {
 	@GetMapping("/healthCheck")
 	public String healthCheck(){
-		return "Hello, current time is: " + new Date().toString();
+		return "Hello, current time is : " + new Date().toString();
 	}
 }
