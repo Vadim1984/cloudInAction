@@ -6,7 +6,7 @@ swagger page - http://<app domain>:<app port>/swagger-ui.html
 2. build and tag image : docker build -t shvadim84/cloudinactiondockerrepo:latest .
 3. push to repository  : docker push shvadim84/cloudinactiondockerrepo
 4. pull image : docker pull shvadim84/cloudinactiondockerrepo
-5. run container : docker run --name cloudinactioncontainer -d -p 80:8080  shvadim84/cloudinactiondockerrepo
+5. run container : docker run -d -p 80:8080  shvadim84/cloudinactiondockerrepo
 ############################# manage docker daemon on ec2 linux ###########
 1. install docker daemon:
    sudo yum update -y
@@ -17,6 +17,15 @@ swagger page - http://<app domain>:<app port>/swagger-ui.html
 3. sudo systemctl start docker
 4. sudo systemctl stop docker
 5. sudo systemctl status docker
+
+To automatically start Docker and Containerd on boot for other distros:
+ sudo systemctl enable docker.service
+ sudo systemctl enable containerd.service
+
+To disable this behavior, use disable instead.
+
+ sudo systemctl disable docker.service
+ sudo systemctl disable containerd.service
 ############################# install cloudWatch agent ####################
 https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/QuickStartEC2Instance.html
 connect docker logs to cloudWatch - https://docs.docker.com/config/containers/logging/awslogs/
@@ -24,6 +33,17 @@ connect docker logs to cloudWatch - https://docs.docker.com/config/containers/lo
  - creating single container and connect log to cloudWatch
 docker run --log-driver=awslogs --log-opt awslogs-group=/var/log/messages --log-opt awslogs-region=us-east-2 --name cloudinactioncontainer -d -p 80:8080  shvadim84/cloudinactiondockerrepo
 ###########################################################################
+docker run -d -p 8081:8080 -p 50000:50000 jenkins/jenkins:lts
+docker run -d -m 512m -p 8081:8080 -p 50000:50000 jenkins/jenkins:lts
+docker exec -it "container" bash
+security key - cat /var/jenkins_home/secrets/initialAdminPassword
+
+reduce gradle memory using on jenkins pipeline:
+Manage Jenkins=>Configure System=>Global properties=>Environment Variables add:
+   name:GRADLE_OPTS
+   value:-Xmx512m
+###########################################################################
+
 
 
 
