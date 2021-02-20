@@ -38,14 +38,14 @@ pipeline {
             steps {
                 echo "Running build: ${env.BUILD_ID}"
                 sh 'echo "$GRADLE_OPTS"'
-                sh 'gradle clean build --no-daemon'
+                sh 'gradle clean build --no-daemon -x test'
             }
         }
         stage('Test') {
             steps {
                 script {
                     try {
-                        sh 'gradle clean test --no-daemon'
+                        sh 'gradle test --no-daemon'
                     } finally {
                         junit '**/build/test-results/test/*.xml'
                     }

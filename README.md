@@ -34,14 +34,14 @@ connect docker logs to cloudWatch - https://docs.docker.com/config/containers/lo
 docker run --log-driver=awslogs --log-opt awslogs-group=/var/log/messages --log-opt awslogs-region=us-east-2 --name cloudinactioncontainer -d -p 80:8080  shvadim84/cloudinactiondockerrepo
 ###########################################################################
 docker run -d -p 8081:8080 -p 50000:50000 jenkins/jenkins:lts
-docker run -d -m 512m -p 8081:8080 -p 50000:50000 jenkins/jenkins:lts
+docker run -d -m 800m --cpus=0.8 -p 8081:8080 -p 50000:50000 -v jenkins_home:/var/jenkins_home jenkins/jenkins:lts
 docker exec -it "container" bash
 security key - cat /var/jenkins_home/secrets/initialAdminPassword
 
 reduce gradle memory using on jenkins pipeline:
 Manage Jenkins=>Configure System=>Global properties=>Environment Variables add:
    name:GRADLE_OPTS
-   value:-Xmx512m
+   value:-Xmx300m
 ###########################################################################
 
 
