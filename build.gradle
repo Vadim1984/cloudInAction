@@ -26,5 +26,5 @@ dependencies {
 
 test {
 	useJUnit()
-	maxHeapSize = '128m'
+	jvmArgs '-Xmx128m -XX:+HeapDumpOnOutOfMemoryError -XX:MaxMetaspaceSize=128m'
 }

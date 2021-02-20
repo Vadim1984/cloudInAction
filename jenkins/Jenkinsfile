@@ -6,8 +6,11 @@ properties([disableConcurrentBuilds()])
 pipeline {
     agent any
     environment {
+        registry = "shvadim84/cloudinactiondockerrepo"
+        registryCredential = 'dockerhub'
         TARGET_APP_SERVER = 'ec2-3-12-102-248.us-east-2.compute.amazonaws.com'
         JENKINS_USER = 'jenkins'
+        dockerImage = ''
     }
     tools {
         jdk 'jdk8'
@@ -34,32 +37,31 @@ pipeline {
                 ])
             }
         }
-        stage('Build') {
+        stage('Build app') {
             steps {
-                echo "Running build: ${env.BUILD_ID}"
-                sh 'echo "$GRADLE_OPTS"'
+                echo "Running build: :$BUILD_NUMBER"
                 sh 'gradle clean build --no-daemon -x test'
             }
         }
-        stage('Test') {
+        stage('Build image') {
             steps {
                 script {
-                    try {
-                        sh 'gradle test --no-daemon'
-                    } finally {
-                        junit '**/build/test-results/test/*.xml'
+                    dockerImage = docker.build registry + ":latest"
+                }
+            }
+        }
+        stage('Deploy image') {
+            steps {
+                script {
+                    docker.withRegistry( '', registryCredential ) {
+                        dockerImage.push()
                     }
                 }
             }
         }
-        stage('Deploy') {
-            when {
-                expression {
-                    currentBuild.result == null || currentBuild.result == 'SUCCESS'
-                }
-            }
-            steps {
-                echo 'Testing..'
+        stage('clean up docker resources') {
+            steps{
+                echo 'TO-DO: clean images and containers'
             }
         }
     }
