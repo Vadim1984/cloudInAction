@@ -4,13 +4,20 @@
 properties([disableConcurrentBuilds()])
 
 pipeline {
-    agent any
+    agent {
+        node {
+            label 'slave'
+        }
+    }
     environment {
-        registry = "shvadim84/cloudinactiondockerrepo"
-        registryCredential = 'dockerhub'
-        TARGET_APP_SERVER = 'ec2-3-12-102-248.us-east-2.compute.amazonaws.com'
-        JENKINS_USER = 'jenkins'
-        dockerImage = ''
+        IMAGE = "shvadim84/cloudinactiondockerrepo"
+        DOCKER_HUB_REPO_CREDANTIALS_ID = 'dockerhub'
+        TARGET_APP_SERVER = 'ec2-user@ec2-18-223-156-106.us-east-2.compute.amazonaws.com'
+        SSH_CREDENTIALS_ID = 'ssh_private_key_ec2_vm_app'
+        DOCKER_IMAGE = ''
+        REMOVE_CONTAINERS_AND_IMAGES = "'docker ps -aq | xargs -r docker container rm -f && docker image prune -fa'"
+        DEPLOY_IMAGE_EC2_OPERATIONS = "docker pull ${IMAGE}:$BUILD_NUMBER && " +
+                                      "docker run -d -p 80:8080 ${IMAGE}:$BUILD_NUMBER"
     }
     tools {
         jdk 'jdk8'
@@ -43,25 +50,54 @@ pipeline {
                 sh 'gradle clean build --no-daemon -x test'
             }
         }
-        stage('Build image') {
+        stage('Test') {
             steps {
                 script {
-                    dockerImage = docker.build registry + ":latest"
-                }
-            }
-        }
-        stage('Deploy image') {
-            steps {
-                script {
-                    docker.withRegistry( '', registryCredential ) {
-                        dockerImage.push()
+                    try {
+                        sh 'gradle test --no-daemon'
+                    } finally {
+                        junit '**/build/test-results/test/*.xml'
                     }
                 }
             }
         }
-        stage('clean up docker resources') {
+        stage('Build image') {
+            steps {
+                script {
+                    DOCKER_IMAGE = docker.build IMAGE
+                }
+            }
+        }
+        stage('Deploy image to DockerHub') {
+            steps {
+                script {
+                    docker.withRegistry( '', DOCKER_HUB_REPO_CREDANTIALS_ID ) {
+                        DOCKER_IMAGE.push("$BUILD_NUMBER")
+                        DOCKER_IMAGE.push("latest")
+                    }
+                }
+            }
+        }
+        stage('Cleanup build env') {
+            steps {
+                sh 'docker system prune -af --volumes'
+            }
+        }
+        stage('Cleanup app server') {
             steps{
-                echo 'TO-DO: clean images and containers'
+                sshagent(credentials:[SSH_CREDENTIALS_ID]) {
+                    sh """
+                           ssh -o StrictHostKeyChecking=no ${TARGET_APP_SERVER} \
+                           ${REMOVE_CONTAINERS_AND_IMAGES}
+                       """
+                }
+            }
+        }
+        stage('Deploy app to app server') {
+            steps {
+                sshagent(credentials:[SSH_CREDENTIALS_ID]) {
+                    sh 'ssh -o StrictHostKeyChecking=no ${TARGET_APP_SERVER} ${DEPLOY_IMAGE_EC2_OPERATIONS}'
+                }
             }
         }
     }

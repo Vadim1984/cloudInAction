@@ -26,5 +26,6 @@ dependencies {
 
 test {
 	useJUnit()
-	jvmArgs '-Xmx128m -XX:+HeapDumpOnOutOfMemoryError -XX:MaxMetaspaceSize=128m'
+	maxHeapSize = "16m"
+	maxParallelForks="1"
 }
