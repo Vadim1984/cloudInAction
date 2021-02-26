@@ -70,7 +70,7 @@ Manage Jenkins=>Configure System=>Global properties=>Environment Variables add:
 ############################ JENKINS SLAVE NODE SET UP ##############################
 1. create user jenkins :
    - useradd jenkins
-   - passwd jenkins
+   - passwd ******
 2. set permissions to user dir : sudo chmod -R 777 /home/jenkins
 3. add public ssh key of jenkins@masterNode to /home/jenkins/.ssh/authorized_keys on slave node
 4?. on master jenkins node : set PasswordAuthentication yes in /etc/ssh/ssh_config
