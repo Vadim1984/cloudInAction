@@ -4,18 +4,18 @@ import com.example.cloudinaction.dto.ProductDto;
 import com.example.cloudinaction.facades.ProductFacade;
 import com.example.cloudinaction.models.Product;
 import com.example.cloudinaction.services.ProductService;
+import com.example.cloudinaction.util.ProductUtil;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class DefaultProductFacade implements ProductFacade {
 
     @Autowired
@@ -54,29 +54,20 @@ public class DefaultProductFacade implements ProductFacade {
     public List<ProductDto> getProductNameContains(String nameSubString, Pageable pageData) {
         List<Product> products = productService.getProductNameContains(nameSubString, pageData);
 
-        return convertListModelToListDto(products);
+        return ProductUtil.convertListModelToListDto(products);
     }
 
     @Override
     public List<ProductDto> getProductsPriceBetween(BigDecimal min, BigDecimal max, Pageable pageData) {
         List<Product> products = productService.getProductsPriceBetween(min, max, pageData);
 
-        return convertListModelToListDto(products);
+        return ProductUtil.convertListModelToListDto(products);
     }
 
     @Override
     public List<ProductDto> getAllProducts(Pageable pageData) {
         List<Product> allProducts = productService.getAllProducts(pageData);
 
-        return convertListModelToListDto(allProducts);
+        return ProductUtil.convertListModelToListDto(allProducts);
     }
-
-    private List<ProductDto> convertListModelToListDto(List<Product> products){
-        return Optional.ofNullable(products)
-                .orElseGet(ArrayList::new)
-                .stream()
-                .map(product -> conversionService.convert(product, ProductDto.class))
-                .collect(Collectors.toList());
-    }
-
 }

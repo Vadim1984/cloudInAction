@@ -1,23 +1,18 @@
 package com.example.cloudinaction.controllers;
 
-import com.example.cloudinaction.dao.CategoryRepository;
 import com.example.cloudinaction.dao.ProductRepository;
 import com.example.cloudinaction.dto.ProductDto;
 import com.example.cloudinaction.models.Product;
 import java.math.BigDecimal;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.List;
 import java.util.function.Predicate;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -26,33 +21,26 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import static com.example.cloudinaction.TestUtils.createUrl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:sql/refresh_db.sql")
 public class ProductControllerTest {
-    @Value("${host}")
-    private String host;
-    @Value("${protocol}")
-    private String protocol;
     @LocalServerPort
     private int port;
-    @Autowired
-    Environment environment;
     @Autowired
     private TestRestTemplate restTemplate;
     @Autowired
     private ProductRepository productRepository;
-    @Autowired
-    private CategoryRepository categoryRepository;
 
     @Test
-    public void testGetAllProducts() throws UnknownHostException {
+    public void testGetAllProducts() {
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<List<ProductDto>> response = restTemplate.exchange(createURLWithPort("/products"),
+        ResponseEntity<List<ProductDto>> response = restTemplate.exchange(createUrl(port, "/products"),
                 HttpMethod.GET,
                 entity,
                 new ParameterizedTypeReference<List<ProductDto>>() {
@@ -66,13 +54,13 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void testShouldReturnProductsWhichNameContainsInput() throws UnknownHostException {
+    public void testShouldReturnProductsWhichNameContainsInput() {
         String input = "boa";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<List<ProductDto>> response = restTemplate.exchange(createURLWithPort(String.format("/products/name?nameSubString=%s", input)),
+        ResponseEntity<List<ProductDto>> response = restTemplate.exchange(createUrl(port, String.format("/products/name?nameSubString=%s", input)),
                 HttpMethod.GET,
                 entity,
                 new ParameterizedTypeReference<List<ProductDto>>() {
@@ -86,13 +74,13 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void testShouldReturn404StatusCodeWhenProductsWithInputNameAreNotExistInDB() throws UnknownHostException {
+    public void testShouldReturn404StatusCodeWhenProductsWithInputNameAreNotExistInDB() {
         String input = "not_found";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort(String.format("/products/name?nameSubString=%s", input)),
+        ResponseEntity<String> response = restTemplate.exchange(createUrl(port, String.format("/products/name?nameSubString=%s", input)),
                 HttpMethod.GET,
                 entity,
                 String.class);
@@ -101,13 +89,13 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void testGetProductById() throws UnknownHostException {
+    public void testGetProductById() {
         String productId = "1";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<ProductDto> response = restTemplate.exchange(createURLWithPort("/product/" + productId),
+        ResponseEntity<ProductDto> response = restTemplate.exchange(createUrl(port, "/product/" + productId),
                 HttpMethod.GET,
                 entity,
                 ProductDto.class);
@@ -120,13 +108,13 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void testShouldReturn404StatusCodeForGetProductIfProductNotExistForInputId() throws UnknownHostException {
+    public void testShouldReturn404StatusCodeForGetProductIfProductNotExistForInputId() {
         String productId = "1000";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/product/" + productId),
+        ResponseEntity<String> response = restTemplate.exchange(createUrl(port, "/product/" + productId),
                 HttpMethod.GET,
                 entity,
                 String.class);
@@ -135,7 +123,7 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void testDeleteProductById() throws UnknownHostException {
+    public void testDeleteProductById() {
         List<Product> initialData = productRepository.findAll();
 
         String productId = "1";
@@ -143,7 +131,7 @@ public class ProductControllerTest {
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/product/" + productId),
+        ResponseEntity<String> response = restTemplate.exchange(createUrl(port, "/product/" + productId),
                 HttpMethod.DELETE,
                 entity,
                 String.class);
@@ -155,13 +143,13 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void testShouldReturn404StatusCodeForDeleteProductIfProductNotExistForInputId() throws UnknownHostException {
+    public void testShouldReturn404StatusCodeForDeleteProductIfProductNotExistForInputId() {
         String productId = "1000";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/product/" + productId),
+        ResponseEntity<String> response = restTemplate.exchange(createUrl(port, "/product/" + productId),
                 HttpMethod.DELETE,
                 entity,
                 String.class);
@@ -170,14 +158,14 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void testGetProductsWhichPriceIsInRange() throws UnknownHostException {
+    public void testGetProductsWhichPriceIsInRange() {
         String priceMin = "500";
         String priceMax = "1200";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<List<ProductDto>> response = restTemplate.exchange(createURLWithPort(String.format("/products/price?pricemin=%s&pricemax=%s", priceMin, priceMax)),
+        ResponseEntity<List<ProductDto>> response = restTemplate.exchange(createUrl(port, String.format("/products/price?pricemin=%s&pricemax=%s", priceMin, priceMax)),
                 HttpMethod.GET,
                 entity,
                 new ParameterizedTypeReference<List<ProductDto>>() {
@@ -193,14 +181,14 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void testShouldReturn404StatusCodeForGetProductsWhichPriceIsInRangeIfProductsForRangeNotFound() throws UnknownHostException {
+    public void testShouldReturn404StatusCodeForGetProductsWhichPriceIsInRangeIfProductsForRangeNotFound() {
         String priceMin = "500000";
         String priceMax = "1200000";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort(String.format("/products/price?pricemin=%s&pricemax=%s", priceMin, priceMax)),
+        ResponseEntity<String> response = restTemplate.exchange(createUrl(port, String.format("/products/price?pricemin=%s&pricemax=%s", priceMin, priceMax)),
                 HttpMethod.GET,
                 entity,
                 String.class);
@@ -209,7 +197,7 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void testCreateProduct() throws Exception {
+    public void testCreateProduct() {
         List<Product> initialData = productRepository.findAll();
 
         ProductDto product = new ProductDto();
@@ -219,7 +207,7 @@ public class ProductControllerTest {
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<ProductDto> entity = new HttpEntity<>(product, headers);
 
-        ResponseEntity<ProductDto> response = restTemplate.exchange(createURLWithPort("/product"),
+        ResponseEntity<ProductDto> response = restTemplate.exchange(createUrl(port, "/product"),
                 HttpMethod.POST,
                 entity,
                 ProductDto.class);
@@ -234,14 +222,14 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void testCreateProductWithoutMandatoryFieldNameShouldReturnBadRequest() throws Exception {
+    public void testCreateProductWithoutMandatoryFieldNameShouldReturnBadRequest() {
         ProductDto product = new ProductDto();
         product.setPrice(BigDecimal.valueOf(749900, 2));
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<ProductDto> entity = new HttpEntity<>(product, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/product"),
+        ResponseEntity<String> response = restTemplate.exchange(createUrl(port, "/product"),
                 HttpMethod.POST,
                 entity,
                 String.class);
@@ -250,14 +238,14 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void testCreateProductWithoutMandatoryFieldPriceShouldReturnBadRequest() throws Exception {
+    public void testCreateProductWithoutMandatoryFieldPriceShouldReturnBadRequest() {
         ProductDto product = new ProductDto();
         product.setName("Santa Cruz Bullit");
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<ProductDto> entity = new HttpEntity<>(product, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/product"),
+        ResponseEntity<String> response = restTemplate.exchange(createUrl(port, "/product"),
                 HttpMethod.POST,
                 entity,
                 String.class);
@@ -267,7 +255,7 @@ public class ProductControllerTest {
 
 
     @Test
-    public void testUpdateProduct() throws Exception {
+    public void testUpdateProduct() {
         String productId = "1";
 
         ProductDto product = new ProductDto();
@@ -277,7 +265,7 @@ public class ProductControllerTest {
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<ProductDto> entity = new HttpEntity<>(product, headers);
 
-        ResponseEntity<ProductDto> response = restTemplate.exchange(createURLWithPort("/product/" + productId),
+        ResponseEntity<ProductDto> response = restTemplate.exchange(createUrl(port, "/product/" + productId),
                 HttpMethod.PUT,
                 entity,
                 ProductDto.class);
@@ -290,7 +278,7 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void testShouldReturn404StatusCodeForUpdateProductIfProductForIdIsNotFound() throws Exception {
+    public void testShouldReturn404StatusCodeForUpdateProductIfProductForIdIsNotFound() {
         String productId = "10000";
 
         ProductDto product = new ProductDto();
@@ -300,15 +288,11 @@ public class ProductControllerTest {
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<ProductDto> entity = new HttpEntity<>(product, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/product/" + productId),
+        ResponseEntity<String> response = restTemplate.exchange(createUrl(port, "/product/" + productId),
                 HttpMethod.PUT,
                 entity,
                 String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-    }
-
-    private String createURLWithPort(String uri) throws UnknownHostException {
-        return protocol + InetAddress.getLoopbackAddress().getHostName() + ":" + port + uri;
     }
 }

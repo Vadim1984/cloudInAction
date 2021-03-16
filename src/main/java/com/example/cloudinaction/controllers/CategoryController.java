@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 public class CategoryController {
@@ -30,6 +31,7 @@ public class CategoryController {
     public ResponseEntity<CategoryDto> createCategory(@Valid @RequestBody CategoryDto category) {
         CategoryDto categoryDto = categoryFacade.createCategory(category);
 
+        //ResponseStatusException
         return new ResponseEntity<>(categoryDto, HttpStatus.CREATED);
     }
 

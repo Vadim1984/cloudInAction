@@ -1,24 +1,21 @@
 package com.example.cloudinaction.controllers;
 
-import com.example.cloudinaction.dao.CategoryRepository;
-import com.example.cloudinaction.dao.ProductRepository;
 import com.example.cloudinaction.dto.CategoryDto;
 import com.example.cloudinaction.dto.ProductDto;
-import com.example.cloudinaction.models.Category;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import com.example.cloudinaction.facades.CategoryFacade;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.env.Environment;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -27,33 +24,29 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import static com.example.cloudinaction.TestUtils.createUrl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:sql/refresh_db.sql")
 public class CategoryControllerTest {
-    @Value("${host}")
-    private String host;
-    @Value("${protocol}")
-    private String protocol;
     @LocalServerPort
     private int port;
     @Autowired
-    Environment environment;
-    @Autowired
     private TestRestTemplate restTemplate;
     @Autowired
-    private ProductRepository productRepository;
+    private CategoryFacade categoryFacade;
     @Autowired
-    private CategoryRepository categoryRepository;
+    @Qualifier("mvcConversionService")
+    private ConversionService conversionService;
 
     @Test
-    public void testGetAllCategories() throws UnknownHostException {
+    public void testGetAllCategories() {
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<List<CategoryDto>> response = restTemplate.exchange(createURLWithPort("/categories"),
+        ResponseEntity<List<CategoryDto>> response = restTemplate.exchange(createUrl(port, "/categories"),
                 HttpMethod.GET,
                 entity,
                 new ParameterizedTypeReference<List<CategoryDto>>() {
@@ -67,13 +60,13 @@ public class CategoryControllerTest {
     }
 
     @Test
-    public void testGetCategoryById() throws UnknownHostException {
+    public void testGetCategoryById() {
         String categoryId = "1";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<CategoryDto> response = restTemplate.exchange(createURLWithPort("/category/" + categoryId),
+        ResponseEntity<CategoryDto> response = restTemplate.exchange(createUrl(port, "/category/" + categoryId),
                 HttpMethod.GET,
                 entity,
                 CategoryDto.class);
@@ -86,13 +79,13 @@ public class CategoryControllerTest {
     }
 
     @Test
-    public void testGetCategoryByIdShouldReturnNotFoundIfCategoryWithGivenIdIdNotExistInDB() throws UnknownHostException {
+    public void testGetCategoryByIdShouldReturnNotFoundIfCategoryWithGivenIdIdNotExistInDB() {
         String categoryId = "1000";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/category/" + categoryId),
+        ResponseEntity<String> response = restTemplate.exchange(createUrl(port, "/category/" + categoryId),
                 HttpMethod.GET,
                 entity,
                 String.class);
@@ -101,33 +94,33 @@ public class CategoryControllerTest {
     }
 
     @Test
-    public void testDeleteCategoryById() throws UnknownHostException {
-        List<Category> initialData = categoryRepository.findAll();
+    public void testDeleteCategoryById() {
+        List<CategoryDto> initialData = categoryFacade.getAllCategories(PageRequest.of(0, 10));
 
         String categoryId = "1";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/category/" + categoryId),
+        ResponseEntity<String> response = restTemplate.exchange(createUrl(port, "/category/" + categoryId),
                 HttpMethod.DELETE,
                 entity,
                 String.class);
 
-        List<Category> afterDeleteData = categoryRepository.findAll();
+        List<CategoryDto> afterDeleteData = categoryFacade.getAllCategories(PageRequest.of(0, 10));
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(afterDeleteData.size()).isEqualTo(initialData.size() - 1);
     }
 
     @Test
-    public void testDeleteCategoryByIdShouldReturnNotFoundIfCategoryWithGivenIdIdNotExistInDB() throws UnknownHostException {
+    public void testDeleteCategoryByIdShouldReturnNotFoundIfCategoryWithGivenIdIdNotExistInDB() {
         String categoryId = "1000";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/category/" + categoryId),
+        ResponseEntity<String> response = restTemplate.exchange(createUrl(port, "/category/" + categoryId),
                 HttpMethod.DELETE,
                 entity,
                 String.class);
@@ -136,21 +129,21 @@ public class CategoryControllerTest {
     }
 
     @Test
-    public void testCreateCategory() throws UnknownHostException {
-        List<Category> initialData = categoryRepository.findAll();
+    public void testCreateCategory() {
+        List<CategoryDto> initialData = categoryFacade.getAllCategories(PageRequest.of(0, 10));
 
-        Category category = new Category();
+        CategoryDto category = new CategoryDto();
         category.setName("Hardtail");
 
         HttpHeaders headers = new HttpHeaders();
-        HttpEntity<Category> entity = new HttpEntity<>(category, headers);
+        HttpEntity<CategoryDto> entity = new HttpEntity<>(category, headers);
 
-        ResponseEntity<CategoryDto> response = restTemplate.exchange(createURLWithPort("/category"),
+        ResponseEntity<CategoryDto> response = restTemplate.exchange(createUrl(port, "/category"),
                 HttpMethod.POST,
                 entity,
                 CategoryDto.class);
 
-        List<Category> finalData = categoryRepository.findAll();
+        List<CategoryDto> finalData = categoryFacade.getAllCategories(PageRequest.of(0, 10));
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(finalData).isNotNull();
@@ -159,15 +152,13 @@ public class CategoryControllerTest {
     }
 
     @Test
-    public void testCreateCategoryShouldReturnBadRequestIfCategoryNameIsNotSet() throws UnknownHostException {
-        List<Category> initialData = categoryRepository.findAll();
-
-        Category category = new Category();
+    public void testCreateCategoryShouldReturnBadRequestIfCategoryNameIsNotSet() {
+        CategoryDto category = new CategoryDto();
 
         HttpHeaders headers = new HttpHeaders();
-        HttpEntity<Category> entity = new HttpEntity<>(category, headers);
+        HttpEntity<CategoryDto> entity = new HttpEntity<>(category, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/category"),
+        ResponseEntity<String> response = restTemplate.exchange(createUrl(port, "/category"),
                 HttpMethod.POST,
                 entity,
                 String.class);
@@ -176,7 +167,7 @@ public class CategoryControllerTest {
     }
 
     @Test
-    public void testUpdateCategory() throws UnknownHostException {
+    public void testUpdateCategory() {
         String categoryId = "1";
 
         CategoryDto category = new CategoryDto();
@@ -185,7 +176,7 @@ public class CategoryControllerTest {
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<CategoryDto> entity = new HttpEntity<>(category, headers);
 
-        ResponseEntity<CategoryDto> response = restTemplate.exchange(createURLWithPort("/category/" + categoryId),
+        ResponseEntity<CategoryDto> response = restTemplate.exchange(createUrl(port, "/category/" + categoryId),
                 HttpMethod.PUT,
                 entity,
                 CategoryDto.class);
@@ -198,13 +189,13 @@ public class CategoryControllerTest {
     }
 
     @Test
-    public void testCategoryProducts() throws UnknownHostException {
+    public void testCategoryProducts() {
         String categoryId = "1";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<CategoryDto> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<List<ProductDto>> response = restTemplate.exchange(createURLWithPort("/category/" + categoryId + "/products"),
+        ResponseEntity<List<ProductDto>> response = restTemplate.exchange(createUrl(port, "/category/" + categoryId + "/products"),
                 HttpMethod.GET,
                 entity,
                 new ParameterizedTypeReference<List<ProductDto>>() {
@@ -218,20 +209,22 @@ public class CategoryControllerTest {
     }
 
     @Test
-    public void testAssignNewProductToCategory() throws UnknownHostException {
+    public void testAssignNewProductToCategory() {
         String categoryId = "1";
         String productId = "3";
 
-        Optional<Category> initialCategoryState = categoryRepository.findById(Long.parseLong(categoryId));
-        boolean isInitialCategoryContainsProduct = initialCategoryState.map(Category::getProducts)
-                .orElseThrow(IllegalArgumentException::new)
+        CategoryDto initialCategoryState = categoryFacade.getCategoryById(Long.parseLong(categoryId));
+
+        boolean isInitialCategoryContainsProduct = Optional.ofNullable(initialCategoryState.getProducts())
+                .orElseGet(ArrayList::new)
                 .stream()
-                .anyMatch(product -> product.getId().equals(Long.parseLong(productId)));
+                .map(product -> conversionService.convert(product, ProductDto.class))
+                .anyMatch(productDto -> Long.valueOf(productId).equals(productDto.getId()));
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<CategoryDto> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<CategoryDto> response = restTemplate.exchange(createURLWithPort(String.format("/category/%s/product/%s/assign", categoryId, productId)),
+        ResponseEntity<CategoryDto> response = restTemplate.exchange(createUrl(port, String.format("/category/%s/product/%s/assign", categoryId, productId)),
                 HttpMethod.PUT,
                 entity,
                 CategoryDto.class);
@@ -241,7 +234,7 @@ public class CategoryControllerTest {
         boolean isUpdatedCategoryContainsProduct = Optional.ofNullable(updatedCategory.getProducts())
                 .orElseGet(ArrayList::new)
                 .stream()
-                .anyMatch(product -> product.getId().equals(Long.parseLong(productId)));
+                .anyMatch(productDto -> Long.valueOf(productId).equals(productDto.getId()));
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(updatedCategory).isNotNull();
@@ -252,14 +245,14 @@ public class CategoryControllerTest {
     }
 
     @Test
-    public void testAssignNewProductToCategoryShouldReturnNotFoundIfCategoryWithGivenIdIdNotExistInDB() throws UnknownHostException {
+    public void testAssignNewProductToCategoryShouldReturnNotFoundIfCategoryWithGivenIdIdNotExistInDB() {
         String categoryId = "1000";
         String productId = "3";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<CategoryDto> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort(String.format("/category/%s/product/%s/assign", categoryId, productId)),
+        ResponseEntity<String> response = restTemplate.exchange(createUrl(port, String.format("/category/%s/product/%s/assign", categoryId, productId)),
                 HttpMethod.PUT,
                 entity,
                 String.class);
@@ -268,14 +261,14 @@ public class CategoryControllerTest {
     }
 
     @Test
-    public void testAssignNewProductToCategoryShouldReturnNotFoundIfProductWithGivenIdIdNotExistInDB() throws UnknownHostException {
+    public void testAssignNewProductToCategoryShouldReturnNotFoundIfProductWithGivenIdIdNotExistInDB() {
         String categoryId = "1";
         String productId = "3000";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<CategoryDto> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort(String.format("/category/%s/product/%s/assign", categoryId, productId)),
+        ResponseEntity<String> response = restTemplate.exchange(createUrl(port, String.format("/category/%s/product/%s/assign", categoryId, productId)),
                 HttpMethod.PUT,
                 entity,
                 String.class);
@@ -284,20 +277,38 @@ public class CategoryControllerTest {
     }
 
     @Test
-    public void testUnAssignProductFromCategory() throws UnknownHostException {
+    public void testAssignNewProductToCategoryShouldReturnBadRequestIfProductAlreadyAssignedToThisCategory() {
         String categoryId = "1";
         String productId = "1";
-
-        Optional<Category> initialCategoryState = categoryRepository.findById(Long.parseLong(categoryId));
-        boolean isInitialCategoryContainsProduct = initialCategoryState.map(Category::getProducts)
-                .orElseThrow(IllegalArgumentException::new)
-                .stream()
-                .anyMatch(product -> product.getId().equals(Long.parseLong(productId)));
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<CategoryDto> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<CategoryDto> response = restTemplate.exchange(createURLWithPort(String.format("/category/%s/product/%s/un-assign", categoryId, productId)),
+        ResponseEntity<String> response = restTemplate.exchange(createUrl(port, String.format("/category/%s/product/%s/assign", categoryId, productId)),
+                HttpMethod.PUT,
+                entity,
+                String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void testUnAssignProductFromCategory() {
+        String categoryId = "1";
+        String productId = "1";
+
+        CategoryDto initialCategoryState = categoryFacade.getCategoryById(Long.parseLong(categoryId));
+
+        boolean isInitialCategoryContainsProduct = Optional.ofNullable(initialCategoryState.getProducts())
+                .orElseGet(ArrayList::new)
+                .stream()
+                .map(product -> conversionService.convert(product, ProductDto.class))
+                .anyMatch(productDto -> Long.valueOf(productId).equals(productDto.getId()));
+
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity<CategoryDto> entity = new HttpEntity<>(null, headers);
+
+        ResponseEntity<CategoryDto> response = restTemplate.exchange(createUrl(port, String.format("/category/%s/product/%s/un-assign", categoryId, productId)),
                 HttpMethod.PUT,
                 entity,
                 CategoryDto.class);
@@ -318,14 +329,14 @@ public class CategoryControllerTest {
     }
 
     @Test
-    public void testUnAssignProductFromCategoryShouldReturnNotFoundIfCategoryWithGivenIdIdNotExistInDB() throws UnknownHostException {
+    public void testUnAssignProductFromCategoryShouldReturnNotFoundIfCategoryWithGivenIdIdNotExistInDB() {
         String categoryId = "1000";
         String productId = "1";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<CategoryDto> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort(String.format("/category/%s/product/%s/un-assign", categoryId, productId)),
+        ResponseEntity<String> response = restTemplate.exchange(createUrl(port, String.format("/category/%s/product/%s/un-assign", categoryId, productId)),
                 HttpMethod.PUT,
                 entity,
                 String.class);
@@ -334,22 +345,18 @@ public class CategoryControllerTest {
     }
 
     @Test
-    public void testUnAssignProductFromCategoryShouldReturnNotFoundIfProductWithGivenIdIdNotExistInDB() throws UnknownHostException {
+    public void testUnAssignProductFromCategoryShouldReturnNotFoundIfProductWithGivenIdIdNotExistInDB() {
         String categoryId = "1";
         String productId = "1000";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<CategoryDto> entity = new HttpEntity<>(null, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort(String.format("/category/%s/product/%s/un-assign", categoryId, productId)),
+        ResponseEntity<String> response = restTemplate.exchange(createUrl(port, String.format("/category/%s/product/%s/un-assign", categoryId, productId)),
                 HttpMethod.PUT,
                 entity,
                 String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-    }
-
-    private String createURLWithPort(String uri) throws UnknownHostException {
-        return protocol + InetAddress.getLoopbackAddress().getHostName() + ":" + port + uri;
     }
 }
