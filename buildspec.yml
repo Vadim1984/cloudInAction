@@ -1,0 +1,31 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto8
+  pre_build:
+    on-failure: ABORT
+    commands:
+      - java -version
+      - gradle -v
+      - docker -v
+      - chmod +x gradlew
+      - ./gradlew clean test
+      - docker login --username $DOCKER_HUB_USER --password $DOCKER_HUB_PASS
+  build:
+    on-failure: ABORT
+    commands:
+      - ./gradlew clean build
+      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
+  post_build:
+    on-failure: ABORT
+    commands:
+      - docker push $IMAGE_REPO_NAME
+reports:
+  report-group-name-or-arn:
+    files:
+    - './build/test-results/test/*.xml'
+artifacts:
+  files:
+    - './build/libs/*.jar'
