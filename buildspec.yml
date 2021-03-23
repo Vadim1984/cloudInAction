@@ -3,7 +3,7 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      java: corretto8
+      java: corretto11
   pre_build:
     on-failure: ABORT
     commands:
@@ -22,6 +22,9 @@ phases:
     on-failure: ABORT
     commands:
       - docker push $IMAGE_REPO_NAME
+      -
+      - docker image ls -a
+      - docker container ls -a
 reports:
   report-group-name-or-arn:
     files:

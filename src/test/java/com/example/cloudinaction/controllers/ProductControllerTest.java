@@ -18,15 +18,15 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static com.example.cloudinaction.TestUtils.createUrl;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:sql/refresh_db.sql")
 public class ProductControllerTest {
     @LocalServerPort
     private int port;
@@ -55,7 +55,7 @@ public class ProductControllerTest {
 
     @Test
     public void testShouldReturnProductsWhichNameContainsInput() {
-        String input = "boa";
+        String input = "test";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
@@ -90,7 +90,7 @@ public class ProductControllerTest {
 
     @Test
     public void testGetProductById() {
-        String productId = "1";
+        String productId = "2";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(null, headers);

@@ -28,6 +28,13 @@ To disable this behavior, use disable instead.
 
  sudo systemctl disable docker.service
  sudo systemctl disable containerd.service
+
+install docker-compose:
+1. sudo curl -L https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+2. https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+3. sudo chmod +x /usr/local/bin/docker-compose
+4. docker-compose version
+
 ############################# install cloudWatch agent ####################
 https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/QuickStartEC2Instance.html
 connect docker logs to cloudWatch - https://docs.docker.com/config/containers/logging/awslogs/
@@ -81,6 +88,10 @@ Manage Jenkins=>Configure System=>Global properties=>Environment Variables add:
 7. install docker : sudo yum install docker -y
 8. add jenkins user to docker group : sudo usermod -a -G docker ec2-user
 9. run docker : sudo systemctl start docker
+###################################### LIQUEBASE ####################################
+gradlew diffChangeLog -PrunList=integrationTest
+gradlew update -PrunList=integrationTest
+
 
 
 

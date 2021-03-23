@@ -21,15 +21,15 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static com.example.cloudinaction.TestUtils.createUrl;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Sql(executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, scripts = "classpath:sql/refresh_db.sql")
 public class CategoryControllerTest {
     @LocalServerPort
     private int port;
@@ -61,7 +61,7 @@ public class CategoryControllerTest {
 
     @Test
     public void testGetCategoryById() {
-        String categoryId = "1";
+        String categoryId = "2";
 
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
@@ -294,8 +294,8 @@ public class CategoryControllerTest {
 
     @Test
     public void testUnAssignProductFromCategory() {
-        String categoryId = "1";
-        String productId = "1";
+        String categoryId = "2";
+        String productId = "3";
 
         CategoryDto initialCategoryState = categoryFacade.getCategoryById(Long.parseLong(categoryId));
 

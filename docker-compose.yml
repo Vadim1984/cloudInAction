@@ -3,4 +3,9 @@ services:
   web:
     image: "shvadim84/cloudinactiondockerrepo:latest"
     ports:
-      - 3333:8080
+      - 80:8080
+    environment:
+      - RDS_HOSTNAME
+      - RDS_PORT
+      - RDS_USERNAME
+      - RDS_PASSWORD

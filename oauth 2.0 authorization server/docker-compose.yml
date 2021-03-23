@@ -1,0 +1,64 @@
+version: '3.7'
+
+services:
+  hydra-migrate:
+    image: oryd/hydra:v1.8.5
+    restart: on-failure
+    networks:
+      - ory-hydra-network
+    command:
+      migrate sql -e --yes
+    environment:
+      DSN: postgres://hydra:secret@ory-hydra-example--postgres:5432/hydra?sslmode=disable
+    depends_on:
+      - postgresd
+
+  hydra:
+    image: oryd/hydra:v1.8.5
+    container_name: ory-hydra-example--hydra
+    restart: on-failure
+    networks:
+      - ory-hydra-network
+    ports:
+      - "4444:4444" # Public port
+      - "4445:4445" # Admin port
+      - "5555:5555" # Port for hydra token user, testing purpose only
+    command:
+      serve all --dangerous-force-http
+    environment:
+      SECRETS_SYSTEM: $$(export LC_CTYPE=C; cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
+      DSN: postgres://hydra:secret@ory-hydra-example--postgres:5432/hydra?sslmode=disable
+      URLS_SELF_ISSUER: http://127.0.0.1:4444 # use public port
+      URLS_CONSENT: http://127.0.0.1:9020/consent # use login-consent
+      URLS_LOGIN: http://127.0.0.1:9020/login # use login-consent
+      LOG_LEVEL: debug
+      OAUTH2_EXPOSE_INTERNAL_ERRORS: 1
+      #STRATEGIES_ACCESS_TOKEN: jwt
+    depends_on:
+      - postgresd
+
+  login-consent:
+    image: oryd/hydra-login-consent-node:v1.3.2
+    container_name: ory-hydra-example--consent
+    networks:
+      - ory-hydra-network
+    ports:
+      - "9020:3000"
+    environment:
+      HYDRA_ADMIN_URL: https://hydra:4445 # use admin port
+      NODE_TLS_REJECT_UNAUTHORIZED: 0  
+
+  postgresd:
+    image: postgres:9.6
+    container_name: ory-hydra-example--postgres
+    restart: on-failure
+    networks:
+      - ory-hydra-network
+    environment:
+      POSTGRES_USER: hydra
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: hydra
+
+networks:
+  ory-hydra-network:
+    name: ory-hydra-net
