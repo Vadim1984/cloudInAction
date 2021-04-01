@@ -5,15 +5,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.oauth2.server.resource.introspection.NimbusOpaqueTokenIntrospector;
 import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector;
 import org.springframework.web.client.RestTemplate;
 
 @Profile("!test")
-@EnableWebSecurity
-public class OauthSecurityConfig extends WebSecurityConfigurerAdapter {
+public class HydraOauthSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private static final String HTTP_PROTOCOL = "http://";
 
@@ -22,6 +20,7 @@ public class OauthSecurityConfig extends WebSecurityConfigurerAdapter {
 
     protected void configure(HttpSecurity http) throws Exception {
         http
+                .csrf().disable()
                 .authorizeRequests(authorize -> authorize
                         .antMatchers("/swagger-ui/**").permitAll()
                         .antMatchers("/swagger-resources/**").permitAll()

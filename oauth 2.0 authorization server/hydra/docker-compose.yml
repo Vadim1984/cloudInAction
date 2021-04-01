@@ -15,7 +15,7 @@ services:
 
   hydra:
     image: oryd/hydra:v1.8.5
-    container_name: ory-hydra-example--hydra
+    container_name: hydra
     restart: on-failure
     networks:
       - ory-hydra-network
@@ -28,9 +28,9 @@ services:
     environment:
       SECRETS_SYSTEM: $$(export LC_CTYPE=C; cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
       DSN: postgres://hydra:secret@ory-hydra-example--postgres:5432/hydra?sslmode=disable
-      URLS_SELF_ISSUER: http://127.0.0.1:4444 # use public port
-      URLS_CONSENT: http://127.0.0.1:9020/consent # use login-consent
-      URLS_LOGIN: http://127.0.0.1:9020/login # use login-consent
+      URLS_SELF_ISSUER: http://ec2-3-16-131-105.us-east-2.compute.amazonaws.com:4444 # use public port
+      URLS_CONSENT: http://ec2-3-16-131-105.us-east-2.compute.amazonaws.com:9020/consent # use login-consent
+      URLS_LOGIN: http://ec2-3-16-131-105.us-east-2.compute.amazonaws.com:9020/login # use login-consent
       LOG_LEVEL: debug
       OAUTH2_EXPOSE_INTERNAL_ERRORS: 1
       #STRATEGIES_ACCESS_TOKEN: jwt
@@ -45,8 +45,8 @@ services:
     ports:
       - "9020:3000"
     environment:
-      HYDRA_ADMIN_URL: https://hydra:4445 # use admin port
-      NODE_TLS_REJECT_UNAUTHORIZED: 0  
+      HYDRA_ADMIN_URL: http://hydra:4445 # use admin port
+      NODE_TLS_REJECT_UNAUTHORIZED: 0
 
   postgresd:
     image: postgres:9.6

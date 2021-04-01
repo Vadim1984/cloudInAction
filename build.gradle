@@ -30,6 +30,7 @@ dependencies {
 	implementation 'org.springframework.security:spring-security-oauth2-resource-server'
 	implementation 'org.springframework.security:spring-security-oauth2-jose'
 	implementation 'com.nimbusds:oauth2-oidc-sdk'
+	implementation group: 'org.keycloak', name: 'keycloak-spring-boot-starter', version: '12.0.4'
 
 	testImplementation 'com.h2database:h2'
 	testImplementation 'junit:junit:4.12'
