@@ -29,7 +29,7 @@ To disable this behavior, use disable instead.
  sudo systemctl disable docker.service
  sudo systemctl disable containerd.service
 
-install docker-compose:
+#### install docker-compose ####
 1. sudo curl -L https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
 2. https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
 3. sudo chmod +x /usr/local/bin/docker-compose
@@ -91,6 +91,10 @@ Manage Jenkins=>Configure System=>Global properties=>Environment Variables add:
 ###################################### LIQUEBASE ####################################
 gradlew diffChangeLog -PrunList=integrationTest
 gradlew update -PrunList=integrationTest
+###################################### LINUX ####################################
+1. check memory: free -m
+
+
 
 
 

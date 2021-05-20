@@ -64,7 +64,6 @@ public class KeycloakOauthSecurityConfig extends KeycloakWebSecurityConfigurerAd
                 .antMatchers(HttpMethod.POST,"/category*").hasRole(WRITE)
                 .antMatchers(HttpMethod.PUT,"/category*").hasRole(WRITE)
                 .antMatchers(HttpMethod.DELETE,"/category*").hasRole(WRITE)
-                .antMatchers(HttpMethod.GET,"/categories*").hasRole(WRITE)
                 .anyRequest()
                 .permitAll();
     }

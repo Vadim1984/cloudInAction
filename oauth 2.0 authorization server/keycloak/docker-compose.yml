@@ -8,6 +8,13 @@ services:
       - "8081:8080" # http
       - "8443:8443" # https
     environment:
+      - KEYCLOAK_LOGLEVEL=DEBUG
+      - KEYCLOAK_STATISTICS=all
       - KEYCLOAK_USER=admin
       - KEYCLOAK_PASSWORD=admin
     restart: unless-stopped
+    volumes:
+      - keycloak_data:/data
+volumes: 
+  keycloak_data:
+        
